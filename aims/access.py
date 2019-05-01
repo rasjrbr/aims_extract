@@ -114,7 +114,7 @@ def get_brief_roster(offset: int = 0) -> str:
     very slow.
     """
     global _session, _aims_url
-    assert _aims_url, "Must connect before calling get_brief_roster"
+    assert _aims_url and _session, "Must connect before calling get_brief_roster"
     fprint("Getting roster ")
     r = _session.post(_aims_url + "perinfo.exe/schedule",
                {
@@ -161,7 +161,7 @@ def get_trip(aims_day: str, trip: str) -> str:
         (e.g. B089) then click the "Trip Details in UTC button".
     """
     global _session, _aims_url
-    assert _aims_url, "Must connect before calling get_trip."
+    assert _aims_url and _session, "Must connect before calling get_trip."
     r = _session.get(_aims_url + "perinfo.exe/schedule",
                     params={
                         "FltInf": "1",
@@ -186,7 +186,7 @@ def get_crewlist(id_: str) -> str:
         click a sector on an AIMS duty sheet.
     """
     global _session, _aims_url
-    assert _aims_url, "Must connect before calling get_crewlist."
+    assert _aims_url and _session, "Must connect before calling get_crewlist."
     r = _session.get(_aims_url + "perinfo.exe/getlegmem",
                     params={
                         "LegInfo": id_,
@@ -207,6 +207,6 @@ def get_index_page() -> str:
         The HTML of the AIMS index page.
     """
     global _session, _aims_url
-    assert _aims_url, "Must connect before calling get_index_page."
+    assert _aims_url and _session, "Must connect before calling get_index_page."
     r = _session.get(_aims_url + "perinfo.exe/index", timeout=REQUEST_TIMEOUT)
     return r.text
