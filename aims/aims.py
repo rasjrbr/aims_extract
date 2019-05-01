@@ -40,12 +40,10 @@ def main() -> int:
         index_page = access.get_index_page()
         access.fprint(" Done\n")
         no_changes_marker = '\r\nvar notification = Trim("");\r\n'
+        changes = False
         if index_page.find(no_changes_marker) == -1:
-            output = sys.stdout if args.format == "changes" else sys.stderr
-            access.logout()
-            print("You have changes.", file=output)
-            return 0
-        if args.format != "changes":
+            changes = True
+        elif args.format != "changes":
             offset = 0
             if args.future: offset = args.future
             elif args.past: offset = -args.past
@@ -60,7 +58,10 @@ def main() -> int:
         return -2
     finally:
         access.logout()
-    if args.format == "changes":
+    if changes:
+        output = sys.stdout if args.format == "changes" else sys.stderr
+        print("You have changes.", file=output)
+    elif args.format == "changes":
         print("No changes")
     elif args.format == "roster":
         print(roster_format.dump(dutylist))
