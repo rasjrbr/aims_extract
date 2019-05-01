@@ -87,12 +87,24 @@ def connect(username:str, password:str) -> None:
     _aims_url = r.url.split("wtouch.exe")[0]
     # fix for session behaviour introduced by 2019-03-14 AIMS update
     if r.text.find("Please log out and try again.") != -1:
-        _session.post(_aims_url + "perinfo.exe/AjAction?LOGOUT=1",
-                      {"AjaxOperation": "0"}, timeout=REQUEST_TIMEOUT)
+        logout(False)
         r = _session.get(autologin_url, timeout=REQUEST_TIMEOUT)
         _aims_url = r.url.split("wtouch.exe")[0]
     fprint(" Done\n")
 
+
+def logout(msg: bool = True) -> None:
+    """Logout of AIMS server
+
+    Args:
+        msg: Display "Logging out . Done"
+    """
+    global _session, _aims_url
+    if _session and _aims_url:
+        if msg: fprint("Logging out ")
+        _session.post(_aims_url + "perinfo.exe/AjAction?LOGOUT=1",
+                      {"AjaxOperation": "0"}, timeout=REQUEST_TIMEOUT)
+        if msg: fprint(" Done\n")
 
 def get_brief_roster(offset: int = 0) -> str:
     """Downloads and returns the html of a  brief roster.

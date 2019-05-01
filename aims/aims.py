@@ -31,7 +31,7 @@ def report_aims_failures(e: AIMSException) -> None:
     print("\n", e.__doc__, "\n", e.str_, file=sys.stderr)
 
 
-def main():
+def main() -> int:
     args = _args()
     if args.quiet: access.fprint = lambda x: None
     try:
@@ -42,33 +42,38 @@ def main():
         no_changes_marker = '\r\nvar notification = Trim("");\r\n'
         if index_page.find(no_changes_marker) == -1:
             output = sys.stdout if args.format == "changes" else sys.stderr
+            access.logout()
             print("You have changes.", file=output)
-            return
-        if args.format == "changes":
-            print("No changes")
-            return
-        offset = 0
-        if args.future: offset = args.future
-        elif args.past: offset = -args.past
-        html = access.get_brief_roster(offset)
-        brief_roster = parse.parse_brief_roster(html)
-        dutylist = process.process_roster_entries(brief_roster, args.force)
-        if args.format == "roster":
-            print(roster_format.dump(dutylist))
-        elif args.format == "logbook":
-            print(logbook_format.dump(dutylist))
-        elif args.format == "ical":
-            print(ical_format.dump(dutylist, args.last_ics))
-        elif args.format == "json":
-            print(json.dumps(dutylist, sort_keys=True, indent=4,
-                  default=lambda x: x.__str__()))
+            return 0
+        if args.format != "changes":
+            offset = 0
+            if args.future: offset = args.future
+            elif args.past: offset = -args.past
+            html = access.get_brief_roster(offset)
+            brief_roster = parse.parse_brief_roster(html)
+            dutylist = process.process_roster_entries(brief_roster, args.force)
     except requests.RequestException as e:
         report_requests_failures(e)
-        sys.exit(-1)
+        return -1
     except AIMSException as e:
         report_aims_failures(e)
-        sys.exit(-2)
+        return -2
+    finally:
+        access.logout()
+    if args.format == "changes":
+        print("No changes")
+    elif args.format == "roster":
+        print(roster_format.dump(dutylist))
+    elif args.format == "logbook":
+        print(logbook_format.dump(dutylist))
+    elif args.format == "ical":
+        print(ical_format.dump(dutylist, args.last_ics))
+    elif args.format == "json":
+        print(json.dumps(dutylist, sort_keys=True, indent=4,
+              default=lambda x: x.__str__()))
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    retval = main()
+    sys.exit(retval)
