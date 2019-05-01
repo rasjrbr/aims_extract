@@ -106,6 +106,7 @@ def logout(msg: bool = True) -> None:
                       {"AjaxOperation": "0"}, timeout=REQUEST_TIMEOUT)
         if msg: fprint(" Done\n")
 
+
 def get_brief_roster(offset: int = 0) -> str:
     """Downloads and returns the html of a  brief roster.
 
