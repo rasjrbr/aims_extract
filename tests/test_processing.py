@@ -254,6 +254,29 @@ class TestDutyProcessing(unittest.TestCase):
                             crewlist=[])] * 2))
 
 
+    def test_aims_midnight_bug(self):
+        data = [
+            ['14262,138549409849,14262,401,brs,1, ,gla,320',
+             '401', 'BRS', 'GLA', '0855', '1010', 'Fri1Jan', '1',
+             'A0900', 'A1009', 'OE-IVK', '1:09', '08:45'],
+            ['14262,138549409849,14262,402,gla,1, ,brs,320',
+             '402', 'GLA', 'BRS', '1035', '1145',
+             'A1040', 'A1145', 'OE-IVK', '1:05', '24:00']]
+        result = process.process_aims_duty(data, dt.date(2000, 1, 1), "test")
+        self.assertEqual(
+            result,
+            Duty(on=datetime.datetime(2000, 1, 1, 8, 45),
+                 off=datetime.datetime(2000, 1, 2, 0, 0), text='test',
+                 sectors=[
+                     Sector(flightnum='test', from_='a', to='b',
+                            sched_off=datetime.datetime(2000, 1, 1, 0, 0),
+                            sched_on=datetime.datetime(2000, 1, 1, 1, 0),
+                            off=datetime.datetime(2000, 1, 1, 0, 0),
+                            on=datetime.datetime(2000, 1, 1, 1, 0),
+                            reg='G-TEST', pax=False,
+                            crewlist=[])] * 2))
+
+
     def test_single_sector_duty(self):
         data = [
             ['14262,138549409849,14262,401,brs,1, ,gla,320',
