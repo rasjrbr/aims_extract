@@ -73,6 +73,12 @@ def connect(username:str, password:str) -> None:
                 "vhost": "standard"},
                       timeout=REQUEST_TIMEOUT)
     del password #to help with auditing
+    if r.text.find("auth_form"):
+        pingid = input("\nPingID: ")
+        r = _session.post("https://connected.easyjet.com/my.policy",
+                          {"_F5_challenge": pingid,
+                           "vhost": "standard"},
+                          timeout=REQUEST_TIMEOUT)
     soup = BeautifulSoup(r.text, 'html.parser')
     url = soup.form.get("action", None)
     if not url: raise LogonError()
