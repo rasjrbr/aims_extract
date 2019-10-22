@@ -47,7 +47,8 @@ def process_roster_entries(entries: List[RosterEntry], force: bool = False
         while len(entry.items):
             p = entry.items.pop()
             if p in ("==>", "D/O", "D/OR", "WD/O", "P/T",
-                     "LVE", "FTGD", "REST", "SICK"):
+                     "LVE", "FTGD", "REST", "SICK", "SIDO",
+                     "SILN"):
                 continue
             elif len(p) >= 4 and p[-3] == ":":
                 end_time = dt.datetime.strptime(p, "%H:%M").time()
