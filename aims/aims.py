@@ -6,14 +6,15 @@ import requests
 import sys
 
 from aims import access, parse, process
-from aims import roster_format, logbook_format, ical_format
+from aims import roster_format, logbook_format, ical_format, droster_format
 from aims.mytypes import *
 
 def _args():
     parser = argparse.ArgumentParser(
         description='Access AIMS data from easyJet servers.')
     parser.add_argument('format',
-                        choices=['roster', 'logbook', 'ical', 'changes', 'json'])
+                        choices=['roster', 'logbook', 'ical',
+                                 'changes', 'json', 'droster'])
     parser.add_argument('username')
     parser.add_argument('--future', type=int)
     parser.add_argument('--past', type=int)
@@ -72,6 +73,8 @@ def main() -> int:
     elif args.format == "json":
         print(json.dumps(dutylist, sort_keys=True, indent=4,
               default=lambda x: x.__str__()))
+    elif args.format == "droster":
+        print(droster_format.dump(dutylist))
     return 0
 
 
