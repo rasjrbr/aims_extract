@@ -74,7 +74,8 @@ def connect(username:str, password:str) -> None:
                       timeout=REQUEST_TIMEOUT)
     del password #to help with auditing
     if r.text.find("auth_form"):
-        pingid = input("\nPingID: ")
+        fprint("\nPingID: ")
+        pingid = input()
         r = _session.post("https://connected.easyjet.com/my.policy",
                           {"_F5_challenge": pingid,
                            "vhost": "standard"},
