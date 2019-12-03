@@ -4,6 +4,8 @@ import requests
 from bs4 import BeautifulSoup # type: ignore
 from aims.mytypes import *
 import sys
+import base64
+import hashlib
 
 REQUEST_TIMEOUT=60
 
@@ -27,12 +29,22 @@ def _check_response(r: requests.Response, *args, **kwargs) -> None:
     r.raise_for_status()
 
 
-def connect(username:str, password:str) -> None:
-    """Connects to AIMS server.
+def _initialise_session() -> None:
+    global _session
+    _session = requests.Session()
+    _session.hooks['response'].append(_check_response)
+    _session.headers.update({
+        "User-Agent":
+        "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) "
+        "Gecko/20100101 Firefox/64.0"})
+
+
+def connect_via_portal(username:str, password:str) -> None:
+    """Connects to AIMS server via Crew Portal.
 
     Args:
         username: AIMS username (e.g. 001234)
-        password: AIMS password
+        password: Crew portal password
 
     Raises:
         requests.ConnectionError:
@@ -58,12 +70,8 @@ def connect(username:str, password:str) -> None:
     _session object and in the global _aims_url variable respectively.
     """
     global _session, _aims_url
-    _session = requests.Session()
-    _session.hooks['response'].append(_check_response)
-    _session.headers.update({
-        "User-Agent":
-        "Mozilla/5.0 (Windows NT 6.1; WOW64; rv:64.0) "
-        "Gecko/20100101 Firefox/64.0"})
+    _initialise_session()
+    assert(_session)
     fprint("Connecting ")
     r = _session.get("https://connected.easyjet.com")
     if r.text.find("g-recaptcha") != -1: raise CaptchaOn()
@@ -96,6 +104,47 @@ def connect(username:str, password:str) -> None:
     if r.text.find("Please log out and try again.") != -1:
         logout(False)
         r = _session.get(autologin_url, timeout=REQUEST_TIMEOUT)
+        _aims_url = r.url.split("wtouch.exe")[0]
+    fprint(" Done\n")
+
+
+def connect_via_ecrew(username:str, password:str) -> None:
+    """Connects to AIMS server ecrew server.
+
+    Args:
+        username: AIMS username (e.g. 001234)
+        password: AIMS password (8 digit or less numeric password)
+
+    Raises:
+        requests.ConnectionError:
+            A network problem occured.
+        requests.HTTPError:
+            Request returned unsuccessful status code.
+        requests.Timeout:
+            No response from server within REQUEST_TIMEOUT seconds.
+
+    Mimic the sign of procedure that a web browser would use to sign on to
+    the easyJet ecrew server. Sets the _session and _aims_url globals allowing
+    access to any other AIMS page.
+    """
+    global _session, _aims_url
+    _initialise_session()
+    assert(_session)
+    fprint("Connecting ")
+    ecrew_url = "https://ecrew.easyjet.com/wtouch/wtouch.exe/verify"
+    encoded_id = base64.b64encode(username.encode()).decode()
+    encoded_pw = hashlib.md5(password.encode()).hexdigest()
+    del password # for simplified auditing
+    r = _session.post(ecrew_url,
+                      {"Crew_Id": encoded_id, "Crm": encoded_pw},
+                      timeout=REQUEST_TIMEOUT)
+    _aims_url = r.url.split("wtouch.exe")[0]
+    #If already logged in, need to logout then login again
+    if r.text.find("Please log out and try again.") != -1:
+        logout(False)
+        r = _session.post(ecrew_url,
+                          {"Crew_Id": encoded_id, "Crm": encoded_pw},
+                          timeout=REQUEST_TIMEOUT)
         _aims_url = r.url.split("wtouch.exe")[0]
     fprint(" Done\n")
 

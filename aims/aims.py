@@ -21,6 +21,7 @@ def _args():
     parser.add_argument('--quiet', "-q", action='store_true')
     parser.add_argument('--last_ics', "-l")
     parser.add_argument('--force', '-f', action='store_true')
+    parser.add_argument('--portal', '-p', action='store_true')
     return parser.parse_args()
 
 
@@ -36,7 +37,10 @@ def main() -> int:
     args = _args()
     if args.quiet: access.fprint = lambda x: None
     try:
-        access.connect(args.username, getpass())
+        if args.portal:
+            access.connect_via_portal(args.username, getpass())
+        else:
+            access.connect_via_ecrew(args.username, getpass())
         access.fprint("Checking for changes ")
         index_page = access.get_index_page()
         access.fprint(" Done\n")
